@@ -1,0 +1,39 @@
+Submitted By:            Bruce Dubbs <bdubbs@linuxfromscratch.org>
+Date:                    2012-07-12
+Initial Package Version: 5.0.2
+Upstream Status:         Not submitted.
+Origin:                  http://git.overlays.gentoo.org/gitweb/?p=user/mv.git;a=blobdiff;f=app-shells/zsh/files/zsh-texi.patch;fp=app-shells/zsh/files/zsh-texi.patch;h=24a72c6dc849b45fdc27d0d0f75a07bb89527ad4;hp=0000000000000000000000000000000000000000;hb=b40aa5630bd6c4da4ac0c7be76c2ff9b13a149da;hpb=ba1705af45700632cd38898a76e490c3c13a2c72 
+Description:             Fixes makeinfo build error (There are still warnings)
+Note:                    The developers use a system called yodl to generate zsh.texi
+                         This does a minimal fix by fixing the texi file directly.
+
+--- zsh-5.0.2/Doc/zsh.texi	2012-12-21 13:33:06.000000000 -0600
++++ zsh-5.0.2.good/Doc/zsh.texi	2013-07-12 22:26:59.000000000 -0500
+@@ -22643,8 +22643,7 @@
+ described above.
+ 
+ @findex _pick_variant
+-@item @t{_pick_variant} [ @t{-b} @var{builtin-label} ] [ @t{-c}
+-@var{command} ] [ @t{-r} @var{name} ]
++@item @t{_pick_variant} [ @t{-b} @var{builtin-label} ] [ @t{-c} @var{command} ] [ @t{-r} @var{name} ]
+ @itemx    @var{label}@t{=}@var{pattern} ... @var{label} [ @var{args} ... ]
+ This function is used to resolve situations where a single command name
+ requires more than one type of handling, either because it
+@@ -24981,14 +24980,9 @@
+ @var{targetwin} into the array named @var{array}.
+ These are, in order:
+ @table @asis
+-@item 
+-The y and x coordinates of the cursor relative to the top left
+-of @var{targetwin}
+-@item 
+-The y and x coordinates of the top left of @var{targetwin} on the
+-screen
+-@item 
+-The size of @var{targetwin} in y and x dimensions.
++@item The y and x coordinates of the cursor relative to the top left of @var{targetwin}
++@item The y and x coordinates of the top left of @var{targetwin} on the screen
++@item The size of @var{targetwin} in y and x dimensions.
+ @end table
+ 
+ @noindent

@@ -1,0 +1,175 @@
+Submitted By:            Armin K. <krejzi at email dot com>
+Date:                    2012-05-11
+Initial Package Version: 1.8
+Upstream Status:         BLFS Specific
+Origin:                  Debian and Self
+Description:             Enables building of shared library, linking against system a52dec and
+                         installing using DESTDIR method.
+
+--- libmpeg3/Makefile.orig	2012-05-11 16:11:50.087690597 +0200
++++ libmpeg3/Makefile	2012-05-11 16:14:22.617161138 +0200
+@@ -2,7 +2,7 @@
+ NASM = nasm
+ USE_MMX = 0
+ USE_CSS = 1
+-A52DIR := $(shell expr a52dec* )
++A52DIR := /usr/include/a52dec
+ 
+ 
+ ifeq ("$(DST)", "")
+@@ -16,9 +16,14 @@
+ endif
+ 
+ 
+-OBJDIR := $(shell uname --machine)
++OBJDIR := $(shell uname -m)
+ 
+ 
++ifeq ($(strip $(prefix)),)
++PREFIX=/usr
++else
++PREFIX=$(prefix)
++endif
+ 
+ 
+ ifeq ($(OBJDIR), alpha)
+@@ -31,14 +36,14 @@
+ ifeq ($(OBJDIR), i686)
+   USE_MMX = 1
+   ifneq ($(HAVE_CFLAGS), y)
+-    CFLAGS := -O2 -fomit-frame-pointer -falign-loops=2 -falign-jumps=2 -falign-functions=2 -I/usr/local/include
++    CFLAGS := -O2 -fomit-frame-pointer -falign-loops=2 -falign-jumps=2 -falign-functions=2
+   endif
+   CFLAGS += -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE
+ endif
+ 
+ ifeq ($(OBJDIR), x86_64)
+   ifneq ($(HAVE_CFLAGS), y)
+-    CFLAGS := -O2 -fomit-frame-pointer -I/usr/local/include
++    CFLAGS := -O2 -fomit-frame-pointer
+   endif
+   CFLAGS += -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE
+ 
+@@ -64,8 +69,7 @@
+ 
+ CFLAGS += \
+ 	-I. \
+-	-I$(A52DIR)/include \
+-	-I$(A52DIR)/liba52
++	-I$(A52DIR)
+ 
+ 
+ 
+@@ -117,6 +121,9 @@
+ 	$(OBJDIR)/video/vlc.o \
+ 	$(OBJDIR)/workarounds.o
+ 
++SOBJS = $(OBJS:.o=.lo)
++.SUFFIXES: .lo
++
+ #OBJS = \
+ #	$(OBJDIR)/audio/ac3.o \
+ #	$(OBJDIR)/audio/bit_allocation.o \
+@@ -136,53 +143,58 @@
+ 	$(OBJDIR)/audio \
+ 	$(OBJDIR)/video
+ 
+-include Makefile.a52
+-
+-DIRS += $(A52DIRS)
+-
++SHLIB=libmpeg3.so
++SHLIB_FULLNAME=$(SHLIB).1.8
++SHLIB_SONAME=$(SHLIB).1
+ 
+ OUTPUT = $(OBJDIR)/libmpeg3.a
++SHAREDOUTPUT = $(OBJDIR)/$(SHLIB_FULLNAME)
+ UTILS = $(OBJDIR)/mpeg3dump $(OBJDIR)/mpeg3peek $(OBJDIR)/mpeg3toc  $(OBJDIR)/mpeg3cat
+ 
+ #$(OBJDIR)/mpeg3split
+ 
+ 
+-LIBS = -lm -lpthread
++LIBS = -lm -lpthread -la52
+ 
+ $(shell mkdir -p $(OBJDIR) )
+ 
+ $(shell echo $(CFLAGS) > $(OBJDIR)/c_flags)
+-$(shell echo $(A52CFLAGS) > $(OBJDIR)/a52_flags)
+ $(shell echo $(OBJS) $(ASMOBJS) $(A52OBJS) $(NASMOBJS) > $(OBJDIR)/objs)
+ $(shell mkdir -p $(DIRS) )
+ 
+-all: $(OUTPUT) $(UTILS)
++all: $(OUTPUT) $(SHAREDOUTPUT) $(UTILS)
+ 
+ 
+ $(OUTPUT): $(OBJS) $(ASMOBJS) $(NASMOBJS) $(A52OBJS)
+ 	ar rcs $(OUTPUT) `cat $(OBJDIR)/objs`
+ 
+-
++$(SHAREDOUTPUT): $(SOBJS)
++	gcc -shared -fPIC -o $(SHAREDOUTPUT) \
++	 $(LIBS) $(SOBJS) \
++	 -Wl,-soname -Wl,$(SHLIB_SONAME)
++	( cd $(OBJDIR); \
++	 ln -sf $(SHLIB_FULLNAME) $(SHLIB); \
++	 ln -sf $(SHLIB_FULLNAME) $(SHLIB_SONAME) \
++	 )
+ 
+ $(OBJDIR)/mpeg3dump: $(OUTPUT) mpeg3dump.c
+-	$(CC) `cat $(OBJDIR)/c_flags` -o $(OBJDIR)/mpeg3dump mpeg3dump.c $(OUTPUT) $(LIBS)
++	$(CC) `cat $(OBJDIR)/c_flags` -o $(OBJDIR)/mpeg3dump mpeg3dump.c $(SHAREDOUTPUT)
+ 
+ $(OBJDIR)/mpeg3peek: $(OUTPUT) mpeg3peek.c
+-	$(CC) `cat $(OBJDIR)/c_flags` -o $(OBJDIR)/mpeg3peek mpeg3peek.c $(OUTPUT) $(LIBS)
++	$(CC) `cat $(OBJDIR)/c_flags` -o $(OBJDIR)/mpeg3peek mpeg3peek.c $(SHAREDOUTPUT)
+ 
+ $(OBJDIR)/mpeg3toc: $(OUTPUT) mpeg3toc.c
+-	$(CC) `cat $(OBJDIR)/c_flags` -o $(OBJDIR)/mpeg3toc mpeg3toc.c $(OUTPUT) $(LIBS)
++	$(CC) `cat $(OBJDIR)/c_flags` -o $(OBJDIR)/mpeg3toc mpeg3toc.c $(SHAREDOUTPUT)
+ 
+ $(OBJDIR)/mpeg3cat: $(OUTPUT) mpeg3cat.c
+-	$(CC) `cat $(OBJDIR)/c_flags` -o $(OBJDIR)/mpeg3cat mpeg3cat.c $(OUTPUT) $(LIBS)
++	$(CC) `cat $(OBJDIR)/c_flags` -o $(OBJDIR)/mpeg3cat mpeg3cat.c $(SHAREDOUTPUT)
+ 
+ #$(OBJDIR)/mpeg3split: $(OUTPUT)
+ #	$(CC) `cat $(OBJDIR)/c_flags` -o $(OBJDIR)/mpeg3split mpeg3split.c $(OUTPUT) $(LIBS)
+ 
+ $(OBJDIR)/mpeg2qt: $(OUTPUT)
+ 	$(CC) `cat $(OBJDIR)/c_flags` -o $(OBJDIR)/mpeg2qt mpeg2qt.c \
+-		$(OUTPUT) \
+-		$(LIBS) \
++		$(SHAREDOUTPUT) \
+ 		-I. \
+ 		-I../quicktime \
+ 		../quicktime/$(OBJDIR)/libquicktime.a \
+@@ -191,7 +203,17 @@
+ 		-ldl
+ 
+ install: 
+-	cp $(UTILS) $(DST)
++	install -d $(DESTDIR)$(PREFIX)/bin
++	install -m 755 $(UTILS) $(DESTDIR)$(PREFIX)/bin
++
++	install -d $(DESTDIR)$(PREFIX)/lib
++	cp -dp $(OUTPUT) $(SHAREDOUTPUT) $(OBJDIR)/$(SHLIB_SONAME) $(OBJDIR)/$(SHLIB) $(DESTDIR)$(PREFIX)/lib
++
++	install -d $(DESTDIR)$(PREFIX)/include/audio
++	install -d $(DESTDIR)$(PREFIX)/include/video
++	install -m 644 *.h $(DESTDIR)$(PREFIX)/include
++	install -m 644 audio/*.h $(DESTDIR)$(PREFIX)/include/audio
++	install -m 644 video/*.h $(DESTDIR)$(PREFIX)/include/video
+ 
+ clean:
+ 	rm -rf $(OBJDIR)
+@@ -204,7 +226,9 @@
+ 	cat *.c *.h audio/*.c audio/*.h video/*.c video/*.h | wc
+ 
+ $(OBJS): 
+-	$(CC) -c `cat $(OBJDIR)/c_flags` $(subst $(OBJDIR)/,, $*.c) -o $*.o
++	$(CC) -c -D_REENTRANT `cat $(OBJDIR)/c_flags` $(subst $(OBJDIR)/,, $*.c) -o $*.o
++$(SOBJS): 
++	$(CC) -c -D_REENTRANT -fPIC `cat $(OBJDIR)/c_flags` $(subst $(OBJDIR)/,, $*.c) -o $*.lo
+ $(ASMOBJS): 
+ 	$(CC) -c `cat $(OBJDIR)/c_flags` $(subst $(OBJDIR)/,, $*.S) -o $*.o
+ $(NASMOBJS): 

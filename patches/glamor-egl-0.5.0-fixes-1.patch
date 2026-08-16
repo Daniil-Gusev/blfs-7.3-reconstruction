@@ -1,0 +1,276 @@
+Submitted By:            Armin K. <krejzi at email dot com>
+Date:                    2013-03-16
+Initial Package Version: 0.5.0
+Upstream Status:         Submitted Upstream
+Origin:                  Upstream Mailing List
+Description:             Varius fixes from upstream mailing lists, including runtime
+                         fixes, build system fixes, etc.
+
+From b9cb6a6b9428d3cb632f4b31ac803939201bd70e Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Michel=20D=C3=A4nzer?= <michel.daenzer@amd.com>
+Date: Wed, 13 Mar 2013 17:15:33 +0100
+Subject: [PATCH] glamoregl: Use xf86ScreenToScrn()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Fixes crashes when glamor is used for a GPU screen with xserver 1.13 or
+newer.
+
+Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=57200#c17
+
+Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+---
+ src/glamor_egl.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/src/glamor_egl.c b/src/glamor_egl.c
+index a248aa2..cd0bdc0 100644
+--- a/src/glamor_egl.c
++++ b/src/glamor_egl.c
+@@ -116,7 +116,7 @@ glamor_egl_get_screen_private(ScrnInfoPtr scrn)
+ _X_EXPORT void
+ glamor_egl_make_current(ScreenPtr screen)
+ {
+-	ScrnInfoPtr scrn = xf86Screens[screen->myNum];
++	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+ 	struct glamor_egl_screen_private *glamor_egl =
+ 	    glamor_egl_get_screen_private(scrn);
+ 
+@@ -139,7 +139,7 @@ glamor_egl_make_current(ScreenPtr screen)
+ _X_EXPORT void
+ glamor_egl_restore_context(ScreenPtr screen)
+ {
+-	ScrnInfoPtr scrn = xf86Screens[screen->myNum];
++	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+ 	struct glamor_egl_screen_private *glamor_egl =
+ 	    glamor_egl_get_screen_private(scrn);
+ 
+@@ -221,7 +221,7 @@ glamor_create_texture_from_image(struct glamor_egl_screen_private
+ Bool
+ glamor_egl_create_textured_screen(ScreenPtr screen, int handle, int stride)
+ {
+-	ScrnInfoPtr scrn = xf86Screens[screen->myNum];
++	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+ 	struct glamor_egl_screen_private *glamor_egl;
+ 	PixmapPtr	screen_pixmap;
+ 
+@@ -245,7 +245,7 @@ glamor_egl_create_textured_screen_ext(ScreenPtr screen,
+ 				      int stride,
+ 				      PixmapPtr *back_pixmap)
+ {
+-	ScrnInfoPtr scrn = xf86Screens[screen->myNum];
++	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+ 	struct glamor_egl_screen_private *glamor_egl;
+ 
+ 	glamor_egl = glamor_egl_get_screen_private(scrn);
+@@ -272,7 +272,7 @@ Bool
+ glamor_egl_create_textured_pixmap(PixmapPtr pixmap, int handle, int stride)
+ {
+ 	ScreenPtr screen = pixmap->drawable.pScreen;
+-	ScrnInfoPtr scrn = xf86Screens[screen->myNum];
++	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+ 	struct glamor_egl_screen_private *glamor_egl;
+ 	EGLImageKHR image;
+ 	GLuint texture;
+@@ -318,7 +318,7 @@ done:
+ static void
+ _glamor_egl_destroy_pixmap_image(PixmapPtr pixmap)
+ {
+-	ScrnInfoPtr scrn = xf86Screens[pixmap->drawable.pScreen->myNum];
++	ScrnInfoPtr scrn = xf86ScreenToScrn(pixmap->drawable.pScreen);
+ 	EGLImageKHR image;
+ 	struct glamor_egl_screen_private *glamor_egl =
+ 	    glamor_egl_get_screen_private(scrn);
+@@ -338,7 +338,7 @@ _glamor_egl_destroy_pixmap_image(PixmapPtr pixmap)
+ _X_EXPORT void
+ glamor_egl_exchange_buffers(PixmapPtr front, PixmapPtr back)
+ {
+-	ScrnInfoPtr scrn = xf86Screens[front->drawable.pScreen->myNum];
++	ScrnInfoPtr scrn = xf86ScreenToScrn(front->drawable.pScreen);
+ 	struct glamor_egl_screen_private *glamor_egl =
+ 	    glamor_egl_get_screen_private(scrn);
+ 	EGLImageKHR old_front_image;
+@@ -371,7 +371,7 @@ glamor_egl_close_screen(CLOSE_SCREEN_ARGS_DECL)
+ 	PixmapPtr screen_pixmap;
+ 	EGLImageKHR back_image;
+ 
+-	scrn = xf86Screens[screen->myNum];
++	scrn = xf86ScreenToScrn(screen);
+ 	glamor_egl = glamor_egl_get_screen_private(scrn);
+ 	screen_pixmap = screen->GetScreenPixmap(screen);
+ 
+@@ -417,7 +417,7 @@ glamor_egl_has_extension(struct glamor_egl_screen_private *glamor_egl,
+ void
+ glamor_egl_screen_init(ScreenPtr screen)
+ {
+-	ScrnInfoPtr scrn = xf86Screens[screen->myNum];
++	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+ 	struct glamor_egl_screen_private *glamor_egl =
+ 	    glamor_egl_get_screen_private(scrn);
+ 
+@@ -588,7 +588,7 @@ glamor_gl_dispatch_init(ScreenPtr screen,
+ 			struct glamor_gl_dispatch *dispatch,
+ 			int gl_version)
+ {
+-	ScrnInfoPtr scrn = xf86Screens[screen->myNum];
++	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+ 	struct glamor_egl_screen_private *glamor_egl =
+ 	    glamor_egl_get_screen_private(scrn);
+ 	if (!glamor_gl_dispatch_init_impl
+-- 
+1.8.2
+
+From 78ef47c5b15c0de3ad1c10e6dfd3db6ea2b94cea Mon Sep 17 00:00:00 2001
+From: Armin K <krejzi@email.com>
+Date: Wed, 13 Mar 2013 18:28:57 +0100
+Subject: [PATCH 1/4] Silence Automake 1.13 warnings
+
+warning: 'INCLUDES' is the old name for 'AM_CPPFLAGS' (or '*_CPPFLAGS')
+---
+ src/Makefile.am | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 55721f6..2140b81 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -12,7 +12,7 @@ endif
+ 
+ instdir = $(moduledir)
+ 
+-INCLUDES = \
++AM_CPPFLAGS = \
+ 	$(XORG_INCS)
+ 
+ AM_CFLAGS = $(CWARNFLAGS) $(XORG_CFLAGS) $(DIX_CFLAGS) $(LIBDRM_CFLAGS)
+-- 
+1.8.2
+
+From afa97c11e3de5d9ad996218c6efe7ea432fe1ed0 Mon Sep 17 00:00:00 2001
+From: Armin K <krejzi@email.com>
+Date: Wed, 13 Mar 2013 18:28:58 +0100
+Subject: [PATCH 2/4] Properly dist necesary headers
+
+---
+ src/Makefile.am | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 2140b81..0879287 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -31,6 +31,7 @@ libglamor_la_SOURCES = \
+ 	glamor_fill.c \
+ 	glamor_fillspans.c \
+ 	glamor_getspans.c \
++	glamor_glext.h \
+ 	glamor_glyphs.c \
+ 	glamor_polyfillrect.c \
+ 	glamor_polylines.c \
+-- 
+1.8.2
+
+From dc9e2799a3c41f20453fc55ce56f5d50354a2f5b Mon Sep 17 00:00:00 2001
+From: Armin K <krejzi@email.com>
+Date: Wed, 13 Mar 2013 18:49:32 +0100
+Subject: [PATCH 3/4] First attempt to make libglamor.so shared versioned
+ library
+
+As recommended by Michel in this thread reply:
+http://lists.freedesktop.org/archives/glamor/2013-March/000305.html
+
+v2: Correct shared library location in glamor.pc.in
+
+Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=62259
+---
+ glamor.pc.in    | 5 ++---
+ src/Makefile.am | 9 ++++-----
+ 2 files changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/glamor.pc.in b/glamor.pc.in
+index 74ecd2e..5257468 100644
+--- a/glamor.pc.in
++++ b/glamor.pc.in
+@@ -2,12 +2,11 @@ prefix=@prefix@
+ exec_prefix=@exec_prefix@
+ libdir=@libdir@
+ includedir=@includedir@
+-moduledir=@moduledir@
+ sdkdir=@sdkdir@
+ GLAMOR_GL_CFLAGS=@GLAMOR_GL_CFLAGS@
+ 
+ Name: glamor
+ Description: X.Org glamor common library.
+ Version: @PACKAGE_VERSION@
+-Cflags: -I${sdkdir} -L${moduledir} -lglamor ${GLAMOR_GL_CFLAGS}
+-
++Cflags: -I${sdkdir} ${GLAMOR_GL_CFLAGS}
++Libs: -L${libdir} -lglamor
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 0879287..4beb559 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -1,4 +1,4 @@
+-inst_LTLIBRARIES = libglamor.la
++lib_LTLIBRARIES = libglamor.la
+ 
+ # Override these since glamor doesn't need them and the needed files aren't
+ # built (in hw/xfree86/os-support/solaris) until after glamor is built
+@@ -10,14 +10,12 @@ else
+ libglamor_la_LIBADD = $(GL_LIBS)
+ endif
+ 
+-instdir = $(moduledir)
+-
+ AM_CPPFLAGS = \
+ 	$(XORG_INCS)
+ 
+ AM_CFLAGS = $(CWARNFLAGS) $(XORG_CFLAGS) $(DIX_CFLAGS) $(LIBDRM_CFLAGS)
+ 
+-libglamor_la_LDFLAGS = -avoid-version
++libglamor_la_LDFLAGS = -version-info 0:0:0
+ 
+ libglamor_la_SOURCES = \
+ 	compat-api.h \
+@@ -65,7 +63,8 @@ if EGL
+ LIBGLAMOREGL = libglamoregl.la
+ module_LTLIBRARIES = $(LIBGLAMOREGL)
+ libglamoregl_la_DEPENDENCIES = libglamor.la
+-libglamoregl_la_LDFLAGS = -avoid-version -module $(EGL_LIBS) -lglamor $(GLX_SYS_LIBS)
++libglamoregl_la_LDFLAGS = -avoid-version -module
++libglamoregl_la_LIBADD = $(EGL_LIBS) $(GLX_SYS_LIBS) libglamor.la
+ libglamoregl_la_SOURCES = glamor_eglmodule.c $(top_srcdir)/src/glamor_egl.c
+ libglamoregl_la_CFLAGS = $(AM_CFLAGS) $(GLX_DEFINES) -I$(top_srcdir)/src $(LIBDRM_CFLAGS) $(EGL_CFLAGS)
+ endif
+-- 
+1.8.2
+
+From ef885115c743058edcb3b5c6ac72f68a0e29d806 Mon Sep 17 00:00:00 2001
+From: Armin K <krejzi@email.com>
+Date: Wed, 13 Mar 2013 18:49:33 +0100
+Subject: [PATCH 4/4] Don't use AC_PROG_LIBTOOL
+
+Autoconf only needs libtool macros which are copied when
+autoreconf is run. There is no need for looking for
+"libtool" program in PATH. This properly disables static
+libraries from being built and installed.
+---
+ configure.ac | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index 230543c..5ff6ae1 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -37,7 +37,6 @@ AM_INIT_AUTOMAKE([foreign dist-bzip2])
+ AM_MAINTAINER_MODE([enable])
+ 
+ # Initialize libtool
+-AC_PROG_LIBTOOL
+ LT_PREREQ([2.2])
+ LT_INIT([disable-static])
+ 
+-- 
+1.8.2
+

@@ -1,0 +1,22 @@
+Submitted By:            Armin K. <krejzi at email dot com>
+Date:                    2013-07-30
+Initial Package Version: 2.0.8
+Upstream Status:         Fixed in git master
+Origin:                  Upstream
+Description:             Fixes compilation with latest live-media (live555).
+
+--- a/modules/demux/live555.cpp	2013-06-18 00:07:53.000000000 +0200
++++ b/modules/demux/live555.cpp	2013-07-30 00:36:56.847053106 +0200
+@@ -232,7 +232,11 @@
+                    char const* applicationName, portNumBits tunnelOverHTTPPortNum,
+                    demux_sys_t *p_sys) :
+                    RTSPClient( env, rtspURL, verbosityLevel, applicationName,
+-                   tunnelOverHTTPPortNum )
++                   tunnelOverHTTPPortNum
++#if LIVEMEDIA_LIBRARY_VERSION_INT >= 1373932800
++                   , -1
++#endif
++                   )
+     {
+         this->p_sys = p_sys;
+     }
