@@ -7,6 +7,19 @@ never published as a numbered release; LFS jumped from 7.3 directly to 7.4.
 This repository reconstructs the state of the book, source packages, and
 patches as they existed at that specific point.
 
+**Read the book: https://daniil-gusev.github.io/blfs-7.3-reconstruction/**
+
+All checksums inside the book and in the package tables are unedited,
+exactly as published in 2013 — they are what you verify a downloaded package
+against. Download links are a different story: the book still shows the
+original 2013 URLs, but many of those have since gone dead. In the package
+tables, dead links have been replaced with working mirrors so the packages
+can actually be re-downloaded today; the checksums next to them are still
+the original ones, so a package fetched from a new link is verified against
+the same hash as it would have been in 2013. Cross-check the book's links
+against the [package tables](#package-tables) in this repository before
+building.
+
 ## Why this snapshot matters
 
 On August 3, 2013, Bruce Dubbs (LFS project lead) announced on the LFS and
@@ -71,11 +84,6 @@ version, including 4.7, could still be bootstrapped with a C compiler alone.
 This is a real, load-bearing change to LFS's host-system requirements, not a
 cosmetic version bump, and it lands exactly at the 7.3/7.4 boundary that this
 repository sits on.
-
-In short: this is a fully-formed, self-consistent BLFS book built against the
-last pre-GCC-4.8 LFS toolchain, captured at the one moment in the project's
-history when that state existed but had not yet been folded into a numbered
-release.
 
 ## Provenance
 
